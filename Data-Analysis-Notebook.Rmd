@@ -1,0 +1,176 @@
+---
+title: "Cyclistic Bike Sharing"
+author: "Rishabh Chaudhary"
+date: "15-12-2022"
+output: html_document
+---
+
+### Google Analytics Certificate Case Study 1 - Cyclistic
+#### Business Task:
+Increasing annual members for Cyclistic, how casual riders can be converted to annual membership?
+
+#### Stakeholders:
+* Executives: Decision makers (detail-oriented)\n
+* Lily Moreno: Marketing Manager (campaigns & initiatives)\n
+* Marketing Analytics team\n
+
+#### Scope of this notebook
+* Downloading data from source
+* Extracting data and move past 12 months data to separate folder
+* Read past 12 months data into dataframe
+* Rename all columns to make sure the names are consistent
+* Combine all dataframes
+* Save combined dataframe as CSV
+
+#### Read data for past 12 months
+```{r}
+# load the data.table package
+library("data.table")
+
+#library(data.table)
+library("lubridate")
+library("ggplot2")
+library("tidyverse")
+library("dplyr")
+
+# change working directory to Past_12_Months
+setwd("C:/Users/RishabhChaudhary/Downloads/certs/Google Analytics Certificate/Case_Study_1_Cyclistic_Bike_Share/data/Past_12_Months/")
+
+# Reading last 12 months data
+df_past_12 <- as.data.frame(fread("Combined_12_months.csv"))
+```
+
+#### Inspect combined data
+```{r}
+#List of column names
+print("Column Names:")
+colnames(df_past_12)
+
+#How many rows are in data frame?
+print("Number of Records:")
+nrow(df_past_12)
+
+#Dimensions of the data frame?
+print("Dimensions of dataset:")
+dim(df_past_12)
+
+#See the first 6 rows of data frame.  Also tail(all_trips)
+print("Sample Records:")
+head(df_past_12)
+
+#See list of columns and data types (numeric, character, etc)
+print("Datatype of variables (columns):")
+str(df_past_12)
+
+#Statistical summary of data. Mainly for numerics
+print("Statistical Summary:")
+summary(df_past_12)
+
+```
+
+#### Cleaning up and adding data to prepare for analysis
+
+* Check distribution in different categories of member_casual
+```{r}
+# Home many categories in member_casual
+table(df_past_12$member_casual)
+```
+
+* Add columns that list the date, month, day, and year of each ride
+```{r}
+#The default format is yyyy-mm-dd
+df_past_12$date <- as.Date(df_past_12$started_at, format = "%m/%d/%Y") 
+df_past_12$month <- format(as.Date(df_past_12$date), "%m")
+df_past_12$day <- format(as.Date(df_past_12$date), "%d")
+df_past_12$year <- format(as.Date(df_past_12$date), "%Y")
+df_past_12$day_of_week <- format(as.Date(df_past_12$date), "%A")
+```
+
+* Inspect the structure of the columns
+```{r}
+str(df_past_12)
+```
+
+* Check distribution in different categories of start_station_name
+```{r}
+# Home many categories in start_station_name
+table(df_past_12$start_station_name == 'HQ QR')
+```
+
+#### Conducting descriptice anlysis
+
+* Descriptive analysis on ride_length
+```{r}
+# Summary of ride_length
+summary(df_past_12$ride_length)
+
+```
+
+* Comparing members and casual users
+```{r}
+aggregate(df_past_12$ride_length ~ df_past_12$member_casual, FUN = mean)
+aggregate(df_past_12$ride_length ~ df_past_12$member_casual, FUN = median)
+aggregate(df_past_12$ride_length ~ df_past_12$member_casual, FUN = max)
+aggregate(df_past_12$ride_length ~ df_past_12$member_casual, FUN = min)
+
+```
+
+* See the average ride time by each day for members vs casual users
+```{r}
+# Fix order of week days
+df_past_12$day_of_week <- ordered(df_past_12$day_of_week, levels=c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+
+aggregate(df_past_12$ride_length ~ df_past_12$member_casual + df_past_12$day_of_week, FUN = mean)
+```
+
+* analyze ridership data by type and weekday
+```{r}
+# creates weekday field using wday()
+# groups by usertype and weekday
+# calculates the number of rides and average duration
+# calculates the average duration
+# sorts the data
+df_past_12 %>% 
+  group_by(member_casual, day_of_week) %>% 
+  summarise(number_of_rides = n(), average_duration = mean(ride_length, na.rm = TRUE)) %>% 
+  arrange(member_casual, day_of_week)
+  								
+```
+
+*  Let's visualize the number of rides by rider type
+```{r}
+df_past_12 %>%
+  group_by(member_casual, day_of_week) %>% 
+  summarise(number_of_rides = n()
+            ,average_duration = mean(ride_length, na.rm=TRUE)) %>% 
+  arrange(member_casual, day_of_week)  %>% 
+  ggplot(aes(x = day_of_week, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge")
+
+```
+
+* Let's create a visualization for average duration
+```{r}
+df_past_12 %>% 
+  group_by(member_casual, day_of_week) %>% 
+  summarise(number_of_rides = n()
+            ,average_duration = mean(ride_length, na.rm=TRUE)) %>% 
+  arrange(member_casual, day_of_week) %>% 
+  ggplot(aes(x = day_of_week, y = average_duration, fill = member_casual)) +
+  geom_col(position = "dodge")
+
+
+```
+
+#### Export summary file for further analysis
+
+* Create a csv file that we will visualize in Excel, Tableau, or my presentation software
+```{r}
+counts <- aggregate(df_past_12$ride_length ~ df_past_12$member_casual + df_past_12$day_of_week, FUN = mean)
+
+setwd("C:/Users/RishabhChaudhary/Downloads/certs/Google Analytics Certificate/Case_Study_1_Cyclistic_Bike_Share/data/Past_12_Months/")
+
+fwrite(as.data.table(counts), "avg_ride_length.csv")
+
+```
+

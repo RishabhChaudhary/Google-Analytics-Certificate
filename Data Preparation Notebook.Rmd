@@ -1,0 +1,50 @@
+---
+title: "Cyclictic Bike Sharing"
+author: "Rishabh Chaudhary"
+date: "12-12-2022"
+output:
+  html_document:
+    df_print: paged
+---
+
+### Google Analytics Certificate Case Study 1 - Cyclistic
+
+
+### Installing required packages
+```{r}
+#install.packages("rvest")
+install.packages("ggplot2")
+install.packages("tidyverse")
+```
+
+### Loading packages
+```{r}
+# library("rvest")
+library("ggplot2")
+library("tidyverse")
+```
+
+### Downloading data trip data from web [source](https://divvy-tripdata.s3.amazonaws.com/index.html)
+```{r eval=FALSE}
+# Creating data source URL links
+url_prepend <- "https://divvy-tripdata.s3.amazonaws.com/"
+url_append <- "-divvy-tripdata.zip"
+
+dates <- c(seq(as.Date(paste0(as.character(202004), '01'), format='%Y%m%d'), as.Date(paste0(as.character(202211), '01'), format='%Y%m%d'), "months")) %>% 
+  str_replace_all('-','') %>% 
+  str_sub(0,6)
+
+url_complete <- url_prepend %>% 
+  paste0(dates, sep="") %>% 
+  paste0(url_append, sep="")
+
+for (url in url_complete) {
+  download.file(url, "data//" %>%  paste0(str_replace(str_split(url, "//")[[1]][2], "/", "-")))
+}
+
+```
+### Downloading data stations trip data from web
+```{r eval=FALSE}
+
+
+```

@@ -1,0 +1,31 @@
+---
+title: "R Notebook"
+author: "Rishabh Chaudhary"
+date: "12-12-2022"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Cyclictic Bike Sharing
+Google Analytics Certificate Case Study 1
+
+## Installing required packages
+```{r include=FALSE}
+install.packages("rvest")
+install.packages("ggplot2")
+install.packages("tidyverse")
+```
+
+## Loading packages
+```{r include=FALSE}
+library("rvest")
+library("ggplot2")
+library("tidyverse")
+```
+
+## Downloading data from web ![source](https://divvy-tripdata.s3.amazonaws.com/index.html)
+```{r}
+
+```
+

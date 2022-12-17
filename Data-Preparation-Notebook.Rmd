@@ -1,0 +1,152 @@
+---
+title: "Cyclistic Bike Sharing"
+author: "Rishabh Chaudhary"
+date: "12-12-2022"
+output: html_document
+---
+
+### Google Analytics Certificate Case Study 1 - Cyclistic
+#### Business Task:
+Increasing annual members for Cyclistic, how casual riders can be converted to annual membership?
+
+#### Stakeholders:
+* Executives: Decision makers (detail-oriented)\n
+* Lily Moreno: Marketing Manager (campaigns & initiatives)\n
+* Marketing Analytics team\n
+
+#### Scope of this notebook
+* Downloading data from source
+* Extracting data and move past 12 months data to separate folder
+* Read past 12 months data into dataframe
+* Rename all columns to make sure the names are consistent
+* Combine all dataframes
+* Save combined dataframe as CSV
+
+#### Installing required packages
+```{r results='hide'}
+install.packages("ggplot2")
+install.packages("tidyverse")
+install.packages("lubridate")
+install.packages("dplyr")
+```
+
+#### Loading packages
+```{r results='hide'}
+library("lubridate")
+library("ggplot2")
+library("tidyverse")
+library("dplyr")
+```
+
+#### Downloading trip data from web [source](https://divvy-tripdata.s3.amazonaws.com/index.html)
+```{r results='hide', eval=FALSE}
+# Creating data source URL links
+url_prepend <- "https://divvy-tripdata.s3.amazonaws.com/"
+url_append <- "-divvy-tripdata.zip"
+
+dates <- c(seq(as.Date(paste0(as.character(202004), '01'), format='%Y%m%d'), as.Date(paste0(as.character(202211), '01'), format='%Y%m%d'), "months")) %>% 
+  str_replace_all('-','') %>% 
+  str_sub(0,6)
+
+url_complete <- url_prepend %>% 
+  paste0(dates, sep="") %>% 
+  paste0(url_append, sep="")
+
+for (url in url_complete) {
+  download.file(url, "data//" %>%  paste0(str_replace(str_split(url, "//")[[1]][2], "/", "-")))
+}
+
+```
+#### Downloading stations-trip data
+```{r results='hide', eval=FALSE}
+urls <- c("https://divvy-tripdata.s3.amazonaws.com/Divvy_Stations_Trips_2013.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Stations_Trips_2014_Q1Q2.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Stations_Trips_2014_Q3Q4.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2015-Q1Q2.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2015_Q3Q4.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2016_Q1Q2.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2016_Q3Q4.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2017_Q1Q2.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2017_Q3Q4.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q1.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q2.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q3.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q4.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2019_Q1.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2019_Q2.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2019_Q3.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2019_Q4.zip",
+          "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2020_Q1.zip")
+
+for (url in urls) {
+  download.file(url, "data//" %>%  paste0(str_replace(str_split(url, "//")[[1]][2], "/", "-")))
+}
+
+```
+
+#### Extract and organise data
+* Extracted all data/ folder
+* Moved past 12 months data fo analysis to separate folder data/Past_12_Months
+* Created two columns in all CSVs by opening in excel (ride_length and day_of_week)
+
+
+#### Read data for past 12 months
+```{r results='hide', message=FALSE, warning=FALSE}
+# change working directory to Past_12_Months
+setwd("C:/Users/RishabhChaudhary/Downloads/certs/Google Analytics Certificate/Case_Study_1_Cyclistic_Bike_Share/data/Past_12_Months/")
+
+# Creating file names for past 12 months
+past_12_months <- c(seq(as.Date(paste0(as.character(202112), '01'), format='%Y%m%d'), as.Date(paste0(as.character(202211), '01'), format='%Y%m%d'), "months")) %>% 
+  str_replace_all('-','') %>% 
+  str_sub(0,6)
+
+# Reading last 12 months data
+for (i in past_12_months) {
+  file_name <- i %>% paste("-divvy-tripdata.csv", sep = "")
+  
+  assign("df_" %>% paste(i, sep=""), read_csv(file_name))
+}
+
+```
+
+#### Check if column names are consistent for all
+```{r}
+# Create all dataframe list
+df_list <- list(df_202112, df_202201, df_202202, df_202203, df_202204, df_202205, df_202206, df_202207, df_202208, df_202209, df_202210, df_202211)
+
+# Print column names
+for (df in df_list) {
+  print(colnames(df))
+}
+
+# Reset column names
+new_colnames <- list("ride_id", "rideable_type", "started_at", "ended_at", "start_station_name", "start_station_id", "end_station_name", "end_station_id", "member_casual", "ride_length", "day_of_week")
+
+df_list_renamed <- lapply(df_list, setNames, new_colnames)
+```
+
+
+#### Combine 12 months data
+```{r}
+df_combined_12 <- rbind(df_202112, df_202201, df_202202, df_202203, df_202204, df_202205, df_202206, df_202207, df_202208, df_202209, df_202210, df_202211)
+head(df_combined_12)
+```
+
+#### Summary of combined data
+```{r}
+summary(df_combined_12)
+```
+
+#### Save combined dataset to a csv file
+```{r}
+# install the data.table package if needed
+if (!require("data.table")) install.packages("data.table")
+
+# load the data.table package
+library(data.table)
+
+setwd("C:/Users/RishabhChaudhary/Downloads/certs/Google Analytics Certificate/Case_Study_1_Cyclistic_Bike_Share/data/Past_12_Months/")
+#write.csv(df_combined_12, "Combined_12_months.csv", row.names = FALSE)
+
+fwrite(as.data.table(df_combined_12), "Combined_12_months.csv")
+```
